@@ -3,6 +3,7 @@ source("Files/Prioritisation-of-analytical-techniques.R")
 library(lubridate)
 library(igraph)
 library(DescTools)
+library(plotly)
 
 # Snippet of code from Dual-apporach-for-score evaluation -----------------
 
@@ -48,7 +49,7 @@ Sub_Dend=function(n){plot(cut(as.dendrogram(CC_GCMS),h=LINK_THV)$lower[[n]],
                           main = paste0("CC (",n,") of main dendrogram with THV at h=",round(LINK_THV,2)),
                           xlab = "Specimens", ylab = "CM Score", )
 } 
-Sub_Dend(6)
+Sub_Dend(2)
 
 
 # Creating network plots between CCs and respective Groups ----------------
@@ -87,11 +88,45 @@ Links$from <- paste0("CC_",Links$from)
 
 # Creating an undirected graph 
 Net <- graph_from_data_frame(d = Links[,1:5],vertices = Nodes[,1:3], directed = F)
-plot(Net)
+
+# Defining node positions and colours for visualisation
+LN <- as.data.frame(
+  layout_with_fr(Net,
+                 grid="nogrid",
+                 coords=norm_coords(layout_with_fr(Net, grid = "nogrid"),
+                                    xmin = -1, xmax = 1, ymin = -1, ymax = 1),  
+                 niter=10,start.temp=0.05),
+  row.names = names(V(Net))
+)
+LN$colour <-  ifelse(substr(rownames(LN),1,2)=="CC","black","grey")
+
+# Extracting the network edgelist
+es <- as.data.frame(get.edgelist(Net))
+
+# Creating the network plot
+plot_ly(
+  x = LN[,1], y = LN[,2], type = "scatter", mode = "markers", source="subset",
+  name = rownames(LN), text = rownames(LN), hoverinfo = rownames(LN),  
+  marker = list(color = LN$colour)
+) %>%
+  layout(
+    shapes = lapply(c(1:length(es[1]$V1)),function(i){
+      list(
+        type = "line",
+        line = list(color = "#030303", width = 0.3),
+        x0 = LN[rownames(LN)==as.character(es[i,]$V1),1],
+        y0 = LN[rownames(LN)==as.character(es[i,]$V1),2],
+        x1 = LN[rownames(LN)==as.character(es[i,]$V2),1],
+        y1 = LN[rownames(LN)==as.character(es[i,]$V2),2]
+      )
+    }),
+    xaxis = list(title = "", showgrid = F, showticklabels = F, zeroline = F),
+    yaxis = list(title = "", showgrid = F, showticklabels = F, zeroline = F))
+
 
 # Plotting CC-Group networks between specific dates (e.g. first year of data)
-Sub_Net <- delete_edges(Net, which(E(Net)$onset<as.numeric(as.Date("2016-01-01")) |   
-                                     E(Net)$terminus>as.numeric(as.Date("2016-12-31"))))
+Sub_Net <- delete_edges(Net, which(E(Net)$onset<as.numeric(as.Date("2015-01-01")) |   
+                                     E(Net)$terminus>as.numeric(as.Date("2015-12-31"))))
 Sub_Net <- delete_vertices(Sub_Net,degree(Sub_Net)==0)
 plot(Sub_Net)
 
@@ -99,8 +134,7 @@ plot(Sub_Net)
 
 # Relational analysis: ----------------------------------------------------
 
-# Number of specimens, groups and CCs
-No_S <- length(unique(Lookup$Specimen))
+# Number of seizures and CCs
 No_SG <- length(unique(Lookup$Group))
 No_CC <- length(unique(Lookup$cluster))
 
@@ -134,14 +168,92 @@ MLP <- Lookup %>%
 MLP_per <- (MLP/No_SG)*100
 
 # Extracting the largest component in the network 
-Net_Comps <- components(Net)
-Net_LC <- decompose(Net)[[which.max(Net_Comps$csize)]]
-plot(Net_LC)
+Net_Comps <- components(Net)$csize
+Net_Comps_Order <- order(Net_Comps, decreasing = T)
+Net_Dec <- decompose(Net)
+Net_LC <- decompose(Net)[[which.max(Net_Comps)]]
+
+# Extracting the 6 largest components in the network
+Y <- lapply(1:6, function(x)Net_Dec[[Net_Comps_Order[x]]])
+
+# Defining node positions and colours of the lergest components for visualisation
+LN_Sub <- lapply(1:6,function(x)
+  data.frame(layout_with_fr(Y[[x]]),
+             colour = LN[match(names(V(Y[[x]])),rownames(LN)),3],
+             row.names = names(V(Y[[x]]))))
+
+# Extracting the edgelists of the largest components
+es_Sub <- lapply(1:6,function(x)as.data.frame(get.edgelist(Y[[x]])))
+
+# Visualising the largest components
+LC_Plots <- lapply(
+  1:6,
+  function(x){
+    plot_ly(
+      x = LN_Sub[[x]][,1], y = LN_Sub[[x]][,2], type = "scatter", mode = "markers",
+      name = rownames(LN_Sub[[x]]), text = rownames(LN_Sub[[x]]), hoverinfo = rownames(LN_Sub[[x]]),
+      marker=list(color = LN_Sub[[x]]$colour
+      )) %>%
+      layout(
+        plot_bgcolor='#FAFBFD',
+        shapes = lapply(c(1:length(es_Sub[[x]][1]$V1)),function(i){
+          list(
+            type = "line",
+            line = list(color = "#030303", width = 0.3),
+            x0 = LN_Sub[[x]][rownames(LN_Sub[[x]])==as.character(es_Sub[[x]][i,]$V1),1],
+            y0 = LN_Sub[[x]][rownames(LN_Sub[[x]])==as.character(es_Sub[[x]][i,]$V1),2],
+            x1 = LN_Sub[[x]][rownames(LN_Sub[[x]])==as.character(es_Sub[[x]][i,]$V2),1],
+            y1 = LN_Sub[[x]][rownames(LN_Sub[[x]])==as.character(es_Sub[[x]][i,]$V2),2]
+          )
+        }),
+        xaxis = list(title = "", showgrid = F, showticklabels = F, zeroline = F),
+        yaxis = list(title = "", showgrid = F, showticklabels = F, zeroline = F))
+  })
+
+subplot(LC_Plots, nrows = as.integer(sqrt(6)))
+
 
 
 
 # Temporal analysis: ------------------------------------------------------
 
+# Creating a line plot (with a cumulative reference) showing the number of months CCs are active
+# Calculating the number of CCs observed over time
+A <- aggregate(Date~cluster, Lookup, function(x){c(min(x), max(x))})
+A <- as.data.frame(do.call(cbind,A))
+A$V2 <- as.Date(A$V2, origin = "1970-01-01")
+A$V3 <- as.Date(A$V3, origin = "1970-01-01")
+A$days <- difftime(A$V3 ,A$V2 , units = c("days")) + 1
+A$days <- as.numeric(A$days)
+A$mo <- round(A$days/30,0)
+A <<- A
+
+B <- aggregate(cluster~mo, A, function(x){length(unique(x))})
+B$cumu <- cumsum(B$cluster)
+B$cumu <- round(B$cumu/max(B$cumu)*100,0)
+
+# visualising the no of CC observed over time 
+ggplot(B,aes(x = mo)) + 
+  geom_line(aes(y=cluster),size=1.5)+
+  geom_line(aes(y=cumu/2),size=1.5, color="grey60")+
+  scale_x_continuous(name="Number of months",expand = c(0,0), limits = c(0,60))+
+  scale_y_continuous(name="Number of CCs",breaks=seq(0,50,5),
+                     sec.axis=sec_axis(~.*2,name="Cumulative number of CCs (%)",breaks=seq(0,100,20)))+
+  theme_light()+
+  theme(legend.position="bottom",
+        axis.title=element_text(face="bold", size = 12), 
+        axis.text = element_text(size = 10),
+        strip.text=element_text(face="bold"),
+        panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank())
+
+# mean and median number of days a CC has been observed 
+round(mean(A$days),0)
+round(median(A$days),0)
+
+
+
+# Plotting Cc 'life' over all quarters 
 # Number of CC gained, retained and lost per quarter
 CC_Life <- Lookup %>% group_by(cluster) %>% summarise(min = min(Date), max = max(Date))
 CC_Life$days <- difftime(CC_Life$max ,CC_Life$min , units = c("days")) + 1
@@ -162,10 +274,10 @@ Quarters <- pivot_longer(Quarters, gain:lost)
 Quarters %>% 
   mutate(
     value = case_when(
-    name == "lost" ~ -1 * value,
-    TRUE ~ as.numeric(value)),
+      name == "lost" ~ -1 * value,
+      TRUE ~ as.numeric(value)),
     YQ = paste0(year(Start),"-",Q)
-    ) %>% 
+  ) %>% 
   ggplot(aes(YQ, value)) +
   geom_bar(aes(fill = name), stat = "identity") +
   scale_fill_manual(values = c("grey60","coral2", "cadetblue")) +
@@ -175,9 +287,125 @@ Quarters %>%
     axis.title.x = element_blank(),
     panel.grid.minor = element_blank(),
     panel.grid.major = element_blank(),
-    axis.text.x = element_text(angle = 90)
+    axis.text.x = element_text(angle = 90, size = 10),
+    axis.text.y = element_text(size = 10)
   )
 
-# OTHER TEMPORAL
-#mean(CC_Life$days)
-#median(CC_Life$days)
+
+
+# Spatial analysis: ------------------------------------------------------
+library(rgdal)
+library(leaflet)
+library(htmltools)
+# Importing Australian postcode shape data
+PC <- readOGR(dsn = "Data/PC_Shapes/V2/POA_2016_AUST_V2.shp")
+
+# creating a map to display where seizures have been made (respective to the date slider)
+# NOTE: CURRENTLY THIS ONLY EXTENDS TO NSW DAATA
+countPC <-
+  Lookup %>% 
+  filter(!is.na(Postcode)) %>%
+  filter(!is.na(cluster)) %>%
+  select(Group,Postcode,Date) %>%
+  distinct()
+
+# Filtering seizure data for certain dates
+data_input <-
+  countPC %>%
+  filter(Date >= "2015-01-01"
+  ) %>%
+  filter(Date <= "2019-12-31"
+  ) %>%
+  group_by(Postcode) %>%
+  summarise(Seizures = dplyr::n())
+
+# Extracting the subset of postcodes respective to the chosen date range
+PCs <- subset(PC, is.element(PC$POA_NAME16,data_input$Postcode))
+
+# ordering the data based on postcodes
+data_input_ordered <- 
+  data_input[order(match(data_input$Postcode,PCs$POA_NAME16)),]
+
+# creating labels for teh postcode polygons
+labels <- paste("<p>", "Postcode: ", data_input_ordered$Postcode, "<p>",
+                "<p>", "No. of seizures: ", data_input_ordered$Seizures, "<p>", sep = "")
+
+# Creating a colour palatte for number of seizures
+pal <- colorBin("YlOrRd", domain = c(0,1), bins = seq(0,8,2))
+
+# Plotting the seizures per postode map
+leaflet() %>% 
+  setView(lat = -33, lng = 147, zoom = 6) %>%
+  addProviderTiles(providers$Stamen.TonerLite) %>%    # Map Themes
+  addPolygons(data = PCs, 
+              color = "#666666", 
+              weight = 1, 
+              fillOpacity = 0.8, 
+              fillColor = pal(data_input_ordered$Seizures),
+              highlightOptions = highlightOptions(
+                weight = 5,
+                color = "#666666",
+                fillOpacity = 0.7,
+                bringToFront = TRUE),
+              label = lapply(labels, HTML)) %>%
+  addLegend(title = "No. of seizures",
+            pal = pal,
+            values = data_input_ordered$Seizures, 
+            opacity = 0.7,
+            position = "topright")
+
+
+
+# Quantitative analysis: ------------------------------------------------------
+
+# Calculating purities for each Region and all regions (domestic) per quarter
+  Lkp_Regional <- Lookup
+  Lkp_Domestic <- Lookup
+  Lkp_Domestic$Region = "Domestic"
+  
+  Lkp_All <-  rbind(Lkp_Regional[,c("Specimen","Date","Year","Purity","Pre","Region")],
+                    Lkp_Domestic[,c("Specimen","Date","Year","Purity","Pre","Region")])
+  Lkp_All$Quarter <- quarters(Lkp_All$Date)
+  Lkp_All$Region_f <- factor(Lkp_All$Region, 
+                             levels = c("ACT","NSW","NT","QLD","SA","TAS","VIC","WA","Domestic"))
+  
+  ggplot(Lkp_All, aes(x=Quarter, y=Purity)) +
+    geom_boxplot(outlier.shape = 21) + 
+    facet_grid(Region_f~Year, scales="free_x", drop=T) +
+    labs(y="Purity (%)")+
+    theme_light()+
+    theme(axis.title=element_text(face="bold",size = 11),
+          axis.text = element_text(size = 10),
+          strip.text=element_text(face="bold",size = 12),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank())
+  
+# Determining precursors used for each Region and all regions (domestic)
+  Lkp_All$Pre <- ifelse(is.na(Lkp_All$Pre),"Unclassified",
+                        ifelse(Lkp_All$Pre%in%c("Pred. EPH/PSE","PSE","EPH"),"EPH/PSE",
+                               ifelse(Lkp_All$Pre=="Pred. P2P","P2P",Lkp_All$Pre)))
+  
+  Lkp_Pre <- Lkp_All %>% 
+    group_by(Region,Year) %>% 
+    count(Pre) %>% 
+    group_by(Region,Year) %>% 
+    mutate(countT = sum(n)) %>% 
+    group_by(Pre, add=TRUE) %>%
+    mutate(per=round(100*n/countT,2))
+  Lkp_Pre$Region_f <- factor(Lkp_Pre$Region, 
+                             levels = c("ACT","NSW","NT","SA","TAS","VIC","WA","Domestic","National"))
+  Lkp_Pre$Pre_f <- factor(Lkp_Pre$Pre, 
+                          levels = c("EPH/PSE","P2P","Mixed","Unclassified"))
+  
+  ggplot(Lkp_Pre,aes(x=Pre_f,y=per)) +
+    geom_bar(stat="identity")+
+    facet_grid(Region_f~Year, scales="fixed", drop=T) +
+    labs(y="Percentage", x="Precursor Type")+
+    scale_fill_grey()+
+    theme_light()+
+    theme(axis.title=element_text(face="bold",size = 11),
+          axis.text = element_text(size = 10),
+          axis.text.x = element_text(angle = 45,hjust=1),
+          strip.text=element_text(face="bold",size = 12),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank())

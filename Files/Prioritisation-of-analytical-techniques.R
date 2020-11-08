@@ -1,7 +1,7 @@
 
 # Reading in the data and basic tidying: ----------------------------------
 
-#Load the required libraries
+# Load the required libraries
 library(openxlsx)
 library(tidyverse)
 library(ggplot2)
@@ -9,16 +9,16 @@ library(ggcorrplot)
 library(pROC)
 library(ggh4x)
 
-#Importing the lookup table
+# Importing the lookup table
 Lookup <-  read.xlsx("Data/Profiles.xlsx", sheet = "Lookup", rowNames = F, colNames = T, detectDates = T)
 
-#Importing Gas Chromatpgraphy Mass Spectometry data 
+# Importing Gas Chromatpgraphy Mass Spectometry data 
 GCMS <-  as.data.frame(read.xlsx("Data/Profiles.xlsx", sheet = "GCMS", rowNames = T, colNames = T))
 
-#Importing Isotopic Ratio Mass Spectrometry data
+# Importing Isotopic Ratio Mass Spectrometry data
 IRMS <-  as.data.frame(read.xlsx("Data/Profiles.xlsx", sheet = "IRMS", rowNames = T, colNames = T))
 
-#Importing Capillary Electrophoresis data
+# Importing Capillary Electrophoresis data
 CE <- as.data.frame(read.xlsx("Data/Profiles.xlsx", sheet = "CE", rowNames = T, colNames = T))
 
 
