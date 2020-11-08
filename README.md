@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 # Analysing illicit drug networks
 
@@ -40,3 +41,6 @@ This work is supported by an Australian Research Council grant
 (LP160100352).
 
 ## References
+=======
+# Analysing illicit drug networks
+>>>>>>> a67918dd5e4a356ec5e5897654c02591a5e91ac2
