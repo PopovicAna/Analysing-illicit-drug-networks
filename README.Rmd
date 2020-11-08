@@ -8,7 +8,11 @@ Using relational, temporal, spatial and other quantitative analyses to generate 
 ## Table of contents
 * [Introduction](https://github.com/PopovicAna/Analysing-illicit-drug-networks#Introduction)
 * [Usage](https://github.com/PopovicAna/Analysing-illicit-drug-networks#Usage)
-* [Building networks](https://github.com/PopovicAna/Analysing-illicit-drug-networks####**Building-illicit-drug-networks**)
+  * [Building networks](https://github.com/PopovicAna/Analysing-illicit-drug-networks#building-illicit-drug-networks)
+  * [Relational analysis](https://github.com/PopovicAna/Analysing-illicit-drug-networks#Relational-analysis)
+  * [Temporal analysis](https://github.com/PopovicAna/Analysing-illicit-drug-networks#Temporal-analysis)
+  * [Spatial analysis](https://github.com/PopovicAna/Analysing-illicit-drug-networks#Spatial-analysis)
+  * [Quantitative analysis](https://github.com/PopovicAna/Analysing-illicit-drug-networks#Quantitative-analysis)
 * [Author](https://github.com/PopovicAna/Analysing-illicit-drug-networks#Author)
 * [Acknowledgements](https://github.com/PopovicAna/Analysing-illicit-drug-networks#Acknowledgements)
 * [References](https://github.com/PopovicAna/Analysing-illicit-drug-networks#References)
