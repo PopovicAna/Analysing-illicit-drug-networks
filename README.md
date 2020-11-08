@@ -9,7 +9,7 @@ generate knowledge regarding organised crime activity
   - [Introduction](https://github.com/PopovicAna/Analysing-illicit-drug-networks#Introduction)
   - [Usage](https://github.com/PopovicAna/Analysing-illicit-drug-networks#Usage)
   - [Building
-    networks](https://github.com/PopovicAna/Analysing-illicit-drug-networks####Building-illicit-drug-networks)
+    networks](https://github.com/PopovicAna/Analysing-illicit-drug-networks####**Building-illicit-drug-networks**)
   - [Author](https://github.com/PopovicAna/Analysing-illicit-drug-networks#Author)
   - [Acknowledgements](https://github.com/PopovicAna/Analysing-illicit-drug-networks#Acknowledgements)
   - [References](https://github.com/PopovicAna/Analysing-illicit-drug-networks#References)
