@@ -6,7 +6,9 @@ generate knowledge regarding organised crime activity
 
 ## Table of contents
 
-  - [Introduction](https://github.com/PopovicAna/Analysing-illicit-drug-networks#Introduction)
+  - [Code
+    overview](https://github.com/PopovicAna/Analysing-illicit-drug-networks#Code-overview)
+  - [Scope](https://github.com/PopovicAna/Analysing-illicit-drug-networks#Scope)
   - [Usage](https://github.com/PopovicAna/Analysing-illicit-drug-networks#Usage)
       - [Building
         networks](https://github.com/PopovicAna/Analysing-illicit-drug-networks#building-illicit-drug-networks)
@@ -22,36 +24,36 @@ generate knowledge regarding organised crime activity
   - [Acknowledgements](https://github.com/PopovicAna/Analysing-illicit-drug-networks#Acknowledgements)
   - [References](https://github.com/PopovicAna/Analysing-illicit-drug-networks#References)
 
-## Introduction
+## Code overview
+
+The following code reads in simulated data (*original data cannot be
+disseminated*) for illicit drug specimens. This is followed by the
+generation of network plots and susbequently various plots are generated
+to better understand drug markets in a relational, temporal and spatial
+context.
+
+## Scope
 
 Illicit drug seizures and their features reflect the activities of
 criminals who are involved in the production and distribution of the
-illicit substances \[142\]. Traditionally, the main focus of illicit
-drug analysis is usually to identify and quantify the active
-substance(s) in a specimen to support judicial processes \[110\].
-However, through a profiling approach, the systematic analysis of
-illicit drug specimens also yields information that can be used in an
-intelligence perspective \[17\]. For example, clustering specimens with
-similar profiles has proven to be useful in an intelligence perspective
-at strategic, operational and tactical levels \[143\]. At a strategic
-level, several studies have demonstrated the use of relational,
-temporal, spatial and quantitative analyses to find patterns between
-specimens and generate knowledge regarding organised crime activity \[4,
-39, 144-150\]. These analysis aim to answer different operational
-questions and provide various results in an intelligence context, see
-Figure 1.
+illicit substances \[1\]. Traditionally, the main focus of illicit drug
+analysis is usually to identify and quantify the active substance(s) in
+a specimen to support judicial processes \[2\]. However, through a
+profiling approach, the systematic analysis of illicit drug specimens
+also yields information that can be used in an intelligence perspective
+\[3\]. For example, clustering specimens with similar profiles has
+proven to be useful in an intelligence perspective at strategic,
+operational and tactical levels \[4\]. At a strategic level, several
+studies have demonstrated the use of relational, temporal, spatial and
+quantitative analyses to find patterns between specimens and generate
+knowledge regarding organised crime activity \[5-13\]. These analysis
+aim to answer different operational questions and provide various
+results in an intelligence context, see Figure 1.
 
-![](Images/Analysis_types.png) *Figure 1: Different dimensions of
-analysis with relevant questions to answer and added value, adapted from
-\[102\]; icons by Icons8 \[3\]*
+![](Images/Analysis_types.png)
 
-The combination of relational, temporal, spatial and quantitative
-analyses can identify prominent clusters in a drug market. Clusters of
-interest may include those with many connected seizures, those showing a
-large increase of seizures over time or those exhibiting extensive
-inter-jurisdictional characteristics. The goal of this research was to
-use the mentioned analyses to evaluate the structure and better
-understand Australian methylamphetamine markets.
+*Figure 1: Different dimensions of analysis with relevant questions to
+answer and added value, adapted from \[14\]; icons by Icons8 \[15\]*
 
 The research in this project builds upon previous projects relating to
 [prioritising analytical
@@ -61,7 +63,12 @@ evaluation](https://github.com/PopovicAna/Dual-approach-for-score-evaluation).
 
 ## Usage
 
-#### **Reading in the data and basic tidying:**
+#### Reading in the data and basic tidying:
+
+Before drug networks can be built the dataset needs to be pre-treated;
+the code for this is located in the file below. For more background
+information about the file loaded in this section please refer to [this
+repository](https://github.com/PopovicAna/Prioritisation-of-analytical-techniques).
 
 ``` r
 # Reading in code from previous research
@@ -77,11 +84,15 @@ library(leaflet)
 library(htmltools)
 ```
 
-#### **Building illicit drug networks:**
+#### Building illicit drug networks:
 
-Defining a THV, see a [dual approach for score
+The following code allows users to define an acceptable threshold value
+(THV) for determining whether specimens are linked or not; this will
+influence how the network plot will look. Essentially, as the THV is
+decreased the number of links in the subsequent network plot will be
+increased. Please see a [dual approach for score
 evaluation](https://github.com/PopovicAna/Dual-approach-for-score-evaluation)
-for more background information.
+for more background information on this topic.
 
 ``` r
 # Snippet of code from Dual-apporach-for-score evaluation -----------------
@@ -99,7 +110,11 @@ Cutoffs <-  data.frame(
 LINK_THV <- as.numeric(tail(subset(Cutoffs, FPR > 0.025, select = THV), n = 1))
 ```
 
-Creating clusters or Chemical Classes (CC) for specimens
+The following code allows users to plot networks between specimens and
+the clusters they belong to (calculated through hierarchical clustering
+analysis). As the clustering is performed on a chemical profiles of the
+illicit drug specimens, the resultant clusters are referred to as
+chemical classes (CC).
 
 ``` r
 # Calculating similarity between specimens based on the optimal comparison metric (CM)
@@ -135,10 +150,10 @@ Sub_Dend(2)
 
 ![](README_files/figure-gfm/unnamed-chunk-3-2.png)<!-- -->
 
-Creating network plots between CCs and respective Groups \> Note: Trying
-to plot the relationship betweeen CC and specimen results in a messy
-graph. A cleaner alternative is plotting the relationships between CC
-and specimen groups.
+> Note: Due to the large number of specimens, trying to plot the
+> relationship between CCs and specimen results in a messy graph. A
+> cleaner alternative is plotting the relationships between CCs and the
+> seizure that the specimen came from.
 
 ``` r
 # Extracting date information (onset and terminus) for each CC
@@ -211,9 +226,10 @@ p <- plot_ly(
 
 ![](Images/newplot.png)
 
-#### **Relational analysis:**
+#### Relational analysis:
 
-Network measures
+Calcuatation of measures specific to the active network (i.e. chosen
+date range):
 
 ``` r
 # Number of seizures and CCs
@@ -250,7 +266,7 @@ MLP <- Lookup %>%
 MLP_per <- (MLP/No_SG)*100
 ```
 
-Extracting the largest components
+Plotting the 6 largest components in the active network:
 
 ``` r
 # Extracting the largest components in the network 
@@ -295,16 +311,15 @@ LC_Plots <- lapply(
         xaxis = list(title = "", showgrid = F, showticklabels = F, zeroline = F),
         yaxis = list(title = "", showgrid = F, showticklabels = F, zeroline = F))
   })
-subplot(LC_Plots, nrows = as.integer(sqrt(6)))
+sub_p <- subplot(LC_Plots, nrows = as.integer(sqrt(6)))
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-6-1.png)
 ![](Images/Subplots.png)
 
 #### **Temporal analysis:**
 
 Creating a line plot (with a cumulative reference) showing the number of
-months CCs are active
+months CCs are active:
 
 ``` r
   # Calculating the number of CCs observed over time
@@ -344,7 +359,7 @@ months CCs are active
 round(mean(A$days),0)
 ```
 
-    ## [1] 959
+    ## [1] 949
 
 ``` r
 round(median(A$days),0)
@@ -352,7 +367,7 @@ round(median(A$days),0)
 
     ## [1] 1178
 
-Plotting Cc ‘life’ over all quarters
+Plotting the chemical class ‘life’ over all quarters:
 
 ``` r
 # Number of CC gained, retained and lost per quarter
@@ -396,6 +411,8 @@ Plotting Cc ‘life’ over all quarters
 ![](README_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
 
 #### **Spatial analysis:**
+
+Generating a map of seizure locations, by postcode:
 
 ``` r
 # Importing Australian postcode shape data
@@ -467,7 +484,7 @@ leaflet() %>%
 
 #### **Quantitative analysis:**
 
-Purities
+Generating boxplots of specimen purities across quarters:
 
 ``` r
 # Calculating purities for each Region and all regions (domestic) per quarter
@@ -495,7 +512,7 @@ Purities
 
 ![](README_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
 
-Precursors
+Generating boxplots of specimen precursors across years:
 
 ``` r
 # Determining precursors used for each Region and all regions (domestic)
@@ -531,6 +548,14 @@ Precursors
 
 ![](README_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
 
+The combination of relational, temporal, spatial and quantitative
+analyses can identify prominent clusters in a drug market. Clusters of
+interest may include those with many connected seizures, those showing a
+large increase of seizures over time or those exhibiting extensive
+inter-jurisdictional characteristics. The goal of this research was to
+use the mentioned analyses to evaluate the structure and better
+understand Australian methylamphetamine markets.
+
 ## Author
 
 Ana Popovic - [popovicana](https://github.com/PopovicAna)
@@ -541,3 +566,48 @@ This work is supported by an Australian Research Council grant
 (LP160100352).
 
 ## References
+
+1.  Margot, P., Traceology: The trace as the fundamental vector of
+    police science/forensic science. Revue Internationale de
+    Criminologie et de Police Technique et Scientifique, 2014. 67(1):
+    p. 72-97.
+2.  Esseiva, P., et al., Forensic drug intelligence: an important tool
+    in law enforcement. Forensic Sci Int, 2007. 167(2-3): p. 247-254.
+3.  Morelato, M., et al., Forensic intelligence framework—Part I:
+    Induction of a transversal model by comparing illicit drugs and
+    false identity documents monitoring. Forensic Science International,
+    2014. 236: p. 181-190.
+4.  Esseiva, P., et al., Chemical profiling and classification of
+    illicit heroin by principal component analysis, calculation of inter
+    sample correlation and artificial neural networks. Talanta, 2005.
+    67(2): p. 360-7.
+5.  Zingg, C., The analysis of ecstasy tablets in a forensic drug
+    intelligence perspective. 2005, Université de Lausanne, Faculté de
+    droit et des sciences criminelles.
+6.  Broséus, J., et al., Chemical profiling: A tool to decipher the
+    structure and organisation of illicit drug markets: An 8-year study
+    in Western Switzerland. Forensic Sci Int, 2016. 266: p. 18-28.
+7.  Bright, D.A., C.E. Hughes, and J. Chalmers, Illuminating dark
+    networks: a social network analysis of an Australian drug
+    trafficking syndicate. Crime, Law and Social Change, 2012. 57(2):
+    p. 151-176.
+8.  Willis, K., et al., Developing and implementing a performance
+    measurement framework for drug law enforcement in Australia. 2006:
+    National Drug Law Enforcement Research Fund Adelaide.
+9.  Willis, K., J. Anderson, and P. Homel, Measuring the effectiveness
+    of drug law enforcement. Trends and issues in crime and criminal
+    justice, 2011(406): p. 1.
+10. Morselli, C. and K. Petit, Law-enforcement disruption of a drug
+    importation network. Global Crime, 2007. 8(2): p. 109-130.
+11. Morselli, C., Hells Angels in springtime. Trends in organized crime,
+    2009. 12(2): p. 145-158.
+12. Morelato, M., et al., When does the cutting of cocaine and heroin
+    occur? The first large-scale study based on the chemical analysis of
+    cocaine and heroin seizures in Switzerland. International Journal of
+    Drug Policy, 2019. 73: p. 7-15.
+13. Hawley, M., Heroin shortage: the cause. Platypus Magazine, 2002. 76:
+    p. 43-48.
+14. Walsh, S., Evaluating the role and impact of forensic DNA profiling
+    on the criminal justice system. 2008, PhD Thesis. University of
+    Technology, Centre for Forensic Science, Sydney.
+15. Icons8. 2020; Available from: <https://icons8.com>.
